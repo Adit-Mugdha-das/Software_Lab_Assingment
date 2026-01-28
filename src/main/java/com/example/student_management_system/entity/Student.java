@@ -45,6 +45,11 @@ public class Student extends User {
     @Builder.Default
     private List<Enrollment> enrollments = new ArrayList<>();
 
+    // One-to-One relationship with StudentProfile
+    @OneToOne(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonIgnore
+    private StudentProfile profile;
+
     public enum Gender {
         MALE, FEMALE, OTHER
     }
