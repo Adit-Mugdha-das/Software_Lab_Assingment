@@ -21,11 +21,29 @@ public class DataLoader implements CommandLineRunner {
     private final StudentRepository studentRepository;
     private final CourseRepository courseRepository;
 
+    // Set this to true to force reload data (clears existing data)
+    private static final boolean FORCE_RELOAD = true;
+
     @Override
     public void run(String... args) throws Exception {
-        if (departmentRepository.count() == 0) {
+        if (FORCE_RELOAD) {
+            log.info("FORCE_RELOAD is enabled - clearing existing data...");
+            clearAllData();
             loadSampleData();
+        } else if (departmentRepository.count() == 0) {
+            loadSampleData();
+        } else {
+            log.info("Sample data already exists. Set FORCE_RELOAD=true to reload.");
         }
+    }
+
+    private void clearAllData() {
+        log.info("Deleting all existing data...");
+        courseRepository.deleteAll();
+        studentRepository.deleteAll();
+        teacherRepository.deleteAll();
+        departmentRepository.deleteAll();
+        log.info("All data cleared successfully!");
     }
 
     private void loadSampleData() {
@@ -135,11 +153,84 @@ public class DataLoader implements CommandLineRunner {
                 .teacher(teacher2)
                 .build();
 
+        // Create Courses WITHOUT assigned teachers
+        Course course5 = Course.builder()
+                .name("Operating Systems")
+                .courseCode("CS202")
+                .description("Process management, memory management, and file systems")
+                .credits(4)
+                .semester(5)
+                .courseType(Course.CourseType.CORE)
+                .department(csDept)
+                .teacher(null) // No teacher assigned
+                .build();
+
+        Course course6 = Course.builder()
+                .name("Computer Networks")
+                .courseCode("CS203")
+                .description("Network protocols, architecture, and security")
+                .credits(3)
+                .semester(5)
+                .courseType(Course.CourseType.CORE)
+                .department(csDept)
+                .teacher(null) // No teacher assigned
+                .build();
+
+        Course course7 = Course.builder()
+                .name("Software Engineering")
+                .courseCode("CS302")
+                .description("Software development lifecycle, testing, and project management")
+                .credits(3)
+                .semester(6)
+                .courseType(Course.CourseType.CORE)
+                .department(csDept)
+                .teacher(null) // No teacher assigned
+                .build();
+
+        Course course8 = Course.builder()
+                .name("Cloud Computing")
+                .courseCode("CS401")
+                .description("Cloud architecture, services, and deployment models")
+                .credits(3)
+                .semester(7)
+                .courseType(Course.CourseType.ELECTIVE)
+                .department(csDept)
+                .teacher(null) // No teacher assigned
+                .build();
+
+        Course course9 = Course.builder()
+                .name("Artificial Intelligence Lab")
+                .courseCode("CS301L")
+                .description("Practical AI implementations and projects")
+                .credits(2)
+                .semester(6)
+                .courseType(Course.CourseType.LAB)
+                .department(csDept)
+                .teacher(null) // No teacher assigned
+                .build();
+
+        Course course10 = Course.builder()
+                .name("Cybersecurity Fundamentals")
+                .courseCode("CS303")
+                .description("Security principles, cryptography, and threat analysis")
+                .credits(3)
+                .semester(6)
+                .courseType(Course.CourseType.ELECTIVE)
+                .department(csDept)
+                .teacher(null) // No teacher assigned
+                .build();
+
         courseRepository.save(course1);
         courseRepository.save(course2);
         courseRepository.save(course3);
         courseRepository.save(course4);
-        log.info("Courses created");
+        courseRepository.save(course5);
+        courseRepository.save(course6);
+        courseRepository.save(course7);
+        courseRepository.save(course8);
+        courseRepository.save(course9);
+        courseRepository.save(course10);
+        log.info("Courses created (including 6 unassigned courses for teacher assignment)");
 
         // Create Sample Student (Active)
         Student student1 = Student.builder()
@@ -183,10 +274,16 @@ public class DataLoader implements CommandLineRunner {
 
         log.info("Sample data loaded successfully!");
         log.info("===========================================");
+        log.info("LOGIN CREDENTIALS:");
         log.info("Teacher Login: john.smith@university.edu / teacher123");
         log.info("Teacher Login: sarah.johnson@university.edu / teacher123");
         log.info("Student Login (Active): alice.brown@student.edu / student123");
         log.info("Student (Pending): bob.wilson@student.edu / student123");
+        log.info("===========================================");
+        log.info("COURSES INFO:");
+        log.info("Total Courses: 10");
+        log.info("Assigned Courses: 4 (already have teachers)");
+        log.info("Unassigned Courses: 6 (available for teacher assignment)");
         log.info("===========================================");
     }
 }

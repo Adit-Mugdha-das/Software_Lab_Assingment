@@ -84,6 +84,13 @@ public class CourseController {
         return ResponseEntity.ok(courses);
     }
 
+    @GetMapping("/unassigned")
+    @Operation(summary = "Get courses without assigned teacher")
+    public ResponseEntity<List<Course>> getUnassignedCourses() {
+        List<Course> courses = courseService.getUnassignedCourses();
+        return ResponseEntity.ok(courses);
+    }
+
     @PostMapping
     @PreAuthorize("hasRole('TEACHER')")
     @Operation(summary = "Create a new course (Teacher only)")
@@ -100,8 +107,16 @@ public class CourseController {
         return ResponseEntity.ok(updatedCourse);
     }
 
+    @PutMapping("/{courseId}/assign-teacher/{teacherId}")
+    @Operation(summary = "Assign teacher to a course")
+    public ResponseEntity<Course> assignTeacherToCourse(
+            @PathVariable Long courseId,
+            @PathVariable Long teacherId) {
+        Course updatedCourse = courseService.assignTeacherToCourse(courseId, teacherId);
+        return ResponseEntity.ok(updatedCourse);
+    }
+
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('TEACHER')")
     @Operation(summary = "Delete course (Teacher only)")
     public ResponseEntity<Void> deleteCourse(@PathVariable Long id) {
         courseService.deleteCourse(id);

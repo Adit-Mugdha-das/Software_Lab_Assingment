@@ -52,6 +52,10 @@ public class CourseService {
         return courseRepository.searchCourses(keyword);
     }
 
+    public List<Course> getUnassignedCourses() {
+        return courseRepository.findByTeacherIsNull();
+    }
+
     @Transactional
     public Course createCourse(Course course) {
         if (courseRepository.existsByCourseCode(course.getCourseCode())) {
@@ -122,6 +126,16 @@ public class CourseService {
     public void deleteCourse(Long id) {
         Course course = getCourseById(id);
         courseRepository.delete(course);
+    }
+
+    @Transactional
+    public Course assignTeacherToCourse(Long courseId, Long teacherId) {
+        Course course = getCourseById(courseId);
+        Teacher teacher = teacherRepository.findById(teacherId)
+                .orElseThrow(() -> new ResourceNotFoundException("Teacher not found with id: " + teacherId));
+
+        course.setTeacher(teacher);
+        return courseRepository.save(course);
     }
 
     public Long getCourseCountByDepartment(Long departmentId) {

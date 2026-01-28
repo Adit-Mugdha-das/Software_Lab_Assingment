@@ -18,6 +18,8 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
 
     List<Course> findByTeacherId(Long teacherId);
 
+    List<Course> findByTeacherIsNull();
+
     List<Course> findBySemester(Integer semester);
 
     @Query("SELECT c FROM Course c WHERE c.department.id = :deptId AND c.semester = :semester")

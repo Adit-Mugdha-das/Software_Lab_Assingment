@@ -362,6 +362,7 @@
         <div class="tabs">
             <div class="tab-buttons">
                 <button class="tab-btn active" onclick="switchTab('my-courses')">📚 My Courses</button>
+                <button class="tab-btn" onclick="switchTab('assign-courses')">➕ Assign Courses</button>
                 <button class="tab-btn" onclick="switchTab('all-students')">👨‍🎓 All Students</button>
                 <button class="tab-btn" onclick="switchTab('course-enrollments')">📝 Course Enrollments</button>
                 <button class="tab-btn" onclick="switchTab('pending-approvals')">⏳ Pending Approvals</button>
@@ -373,6 +374,14 @@
                     <h3 style="margin-bottom: 20px;">My Courses</h3>
                     <div id="myCoursesLoading" class="loading">Loading courses...</div>
                     <div id="myCoursesContent" style="display: none;"></div>
+                </div>
+
+                <!-- Assign Courses Tab -->
+                <div id="assign-courses" class="tab-pane">
+                    <h3 style="margin-bottom: 20px;">➕ Assign Yourself to Courses</h3>
+                    <p style="color: #666; margin-bottom: 20px;">Select from available courses without assigned teachers</p>
+                    <div id="availableCoursesLoading" class="loading">Loading available courses...</div>
+                    <div id="availableCoursesContent" style="display: none;"></div>
                 </div>
 
                 <!-- All Students Tab -->
@@ -445,6 +454,7 @@
                 // Load dashboard data
                 await Promise.all([
                     loadMyCourses(),
+                    loadAvailableCourses(),
                     loadAllStudents(),
                     loadEnrollments(),
                     loadPendingApprovals(),
@@ -717,6 +727,92 @@
 
             // Mark button as active
             event.target.classList.add('active');
+
+            // Reload available courses when switching to that tab
+            if (tabName === 'assign-courses') {
+                loadAvailableCourses();
+            }
+        }
+
+        async function loadAvailableCourses() {
+            try {
+                document.getElementById('availableCoursesLoading').style.display = 'block';
+                document.getElementById('availableCoursesContent').style.display = 'none';
+
+                const response = await fetch('/api/courses/unassigned');
+                if (!response.ok) {
+                    throw new Error('Failed to fetch available courses');
+                }
+
+                const courses = await response.json();
+
+                document.getElementById('availableCoursesLoading').style.display = 'none';
+                document.getElementById('availableCoursesContent').style.display = 'block';
+
+                if (courses.length === 0) {
+                    document.getElementById('availableCoursesContent').innerHTML =
+                        '<div class="empty-state"><h3>No Available Courses</h3><p>All courses currently have assigned teachers.</p></div>';
+                    return;
+                }
+
+                let html = '<div style="display: grid; gap: 15px;">';
+                for (const course of courses) {
+                    html += `
+                        <div class="course-card">
+                            <h4>${course.name} (${course.courseCode})</h4>
+                            <div class="course-meta">
+                                <span class="badge badge-${course.courseType.toLowerCase()}">${course.courseType}</span>
+                                <span>Credits: ${course.credits || 'N/A'}</span>
+                                <span>Semester: ${course.semester || 'N/A'}</span>
+                                <span>Department: ${course.department ? course.department.name : 'N/A'}</span>
+                            </div>
+                            <p>${course.description || 'No description available'}</p>
+                            <div class="action-buttons" style="margin-top: 15px;">
+                                <button class="btn btn-primary" onclick="assignCourseToMe(${course.id}, '${course.name}')">
+                                    ➕ Assign to Me
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }
+                html += '</div>';
+
+                document.getElementById('availableCoursesContent').innerHTML = html;
+
+            } catch (error) {
+                console.error('Error loading available courses:', error);
+                document.getElementById('availableCoursesLoading').style.display = 'none';
+                document.getElementById('availableCoursesContent').style.display = 'block';
+                document.getElementById('availableCoursesContent').innerHTML =
+                    `<div class="empty-state"><h3>Error</h3><p>Failed to load courses: ${error.message}</p></div>`;
+            }
+        }
+
+        async function assignCourseToMe(courseId, courseName) {
+            if (!confirm(`Are you sure you want to assign "${courseName}" to yourself?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/courses/${courseId}/assign-teacher/${currentTeacher.id}`, {
+                    method: 'PUT'
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to assign course');
+                }
+
+                alert(`Course "${courseName}" has been assigned to you successfully!`);
+
+                // Reload both tabs
+                await loadMyCourses();
+                await loadAvailableCourses();
+                await updateStats();
+
+            } catch (error) {
+                console.error('Error assigning course:', error);
+                alert('Failed to assign course: ' + error.message);
+            }
         }
 
         function viewCourseDetails(courseId) {
