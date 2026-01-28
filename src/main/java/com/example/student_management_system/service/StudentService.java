@@ -92,7 +92,7 @@ public class StudentService {
             throw new UnauthorizedException("You can only update your own profile");
         }
 
-        // Update allowed fields (roll number cannot be changed)
+        // Update allowed fields (roll number and department cannot be changed by students)
         if (request.getName() != null) {
             student.setName(request.getName());
         }
@@ -105,7 +105,7 @@ public class StudentService {
         if (request.getDateOfBirth() != null) {
             student.setDateOfBirth(request.getDateOfBirth());
         }
-        if (request.getGender() != null) {
+        if (request.getGender() != null && !request.getGender().isEmpty()) {
             student.setGender(Student.Gender.valueOf(request.getGender().toUpperCase()));
         }
         if (request.getSemester() != null) {
@@ -117,11 +117,14 @@ public class StudentService {
         if (request.getGuardianContact() != null) {
             student.setGuardianContact(request.getGuardianContact());
         }
-        if (request.getDepartmentId() != null) {
-            Department department = departmentRepository.findById(request.getDepartmentId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Department not found"));
-            student.setDepartment(department);
-        }
+
+        // Department can only be updated by admin/teachers, not students themselves
+        // Commenting out department update for student self-service
+        // if (request.getDepartmentId() != null) {
+        //     Department department = departmentRepository.findById(request.getDepartmentId())
+        //             .orElseThrow(() -> new ResourceNotFoundException("Department not found"));
+        //     student.setDepartment(department);
+        // }
 
         return studentRepository.save(student);
     }
