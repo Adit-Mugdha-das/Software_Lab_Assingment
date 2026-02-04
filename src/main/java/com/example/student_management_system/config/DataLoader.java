@@ -22,7 +22,7 @@ public class DataLoader implements CommandLineRunner {
     private final CourseRepository courseRepository;
 
     // Set this to true to force reload data (clears existing data)
-    private static final boolean FORCE_RELOAD = true;
+    private static final boolean FORCE_RELOAD = false;
 
     @Override
     public void run(String... args) throws Exception {

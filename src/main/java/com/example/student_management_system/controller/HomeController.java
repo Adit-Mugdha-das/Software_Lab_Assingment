@@ -55,4 +55,9 @@ public class HomeController {
     public String studentApprovals() {
         return "student-approvals";
     }
+
+    @GetMapping("/database-schema")
+    public String databaseSchema() {
+        return "database-schema";
+    }
 }
