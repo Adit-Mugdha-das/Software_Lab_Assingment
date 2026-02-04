@@ -415,26 +415,31 @@
         </div>
     </div>
 
+    <script src="/js/auth.js"></script>
     <script>
         let currentTeacher = null;
 
         window.addEventListener('DOMContentLoaded', async function() {
+            // Require teacher authentication
+            if (!requireRole('TEACHER')) {
+                return;
+            }
             await loadTeacherData();
         });
 
         async function loadTeacherData() {
             try {
-                const userEmail = sessionStorage.getItem('userEmail');
-                const userRole = sessionStorage.getItem('userRole');
+                const userEmail = getUserInfo().email;
+                const userRole = getUserInfo().role;
 
-                if (!userEmail || userRole !== 'teacher') {
+                if (!userEmail || userRole.toLowerCase() !== 'teacher') {
                     alert('Please login as a teacher to access this page');
-                    window.location.href = '/';
+                    logout();
                     return;
                 }
 
-                // Fetch teacher data
-                const teachersResponse = await fetch('/api/teachers');
+                // Fetch teacher data with authentication
+                const teachersResponse = await fetchWithAuth('/api/teachers');
                 if (!teachersResponse.ok) {
                     throw new Error('Failed to fetch teachers');
                 }
@@ -444,7 +449,7 @@
 
                 if (!currentTeacher) {
                     alert('Teacher account not found. Please contact administration.');
-                    window.location.href = '/';
+                    logout();
                     return;
                 }
 
@@ -470,7 +475,7 @@
 
         async function loadMyCourses() {
             try {
-                const response = await fetch('/api/courses/all');
+                const response = await fetchWithAuth('/api/courses/all');
                 const allCourses = await response.json();
 
                 // Filter courses taught by current teacher
@@ -518,7 +523,7 @@
 
         async function loadAllStudents() {
             try {
-                const response = await fetch('/api/students');
+                const response = await fetchWithAuth('/api/students');
                 const students = await response.json();
 
                 document.getElementById('studentsLoading').style.display = 'none';
@@ -555,7 +560,7 @@
 
         async function loadEnrollments() {
             try {
-                const response = await fetch('/api/enrollments');
+                const response = await fetchWithAuth('/api/enrollments');
                 const enrollments = await response.json();
 
                 document.getElementById('enrollmentsLoading').style.display = 'none';
@@ -596,13 +601,13 @@
 
         async function loadPendingApprovals() {
             try {
-                const response = await fetch('/api/auth/pending-students');
+                const response = await fetchWithAuth('/api/auth/pending-students');
 
                 document.getElementById('approvalsLoading').style.display = 'none';
                 document.getElementById('approvalsContent').style.display = 'block';
 
                 if (!response.ok) {
-                    const students = await fetch('/api/students').then(r => r.json());
+                    const students = await fetchWithAuth('/api/students').then(r => r.json());
                     const pendingStudents = students.filter(s => s.status === 'PENDING');
                     displayPendingStudentsSummary(pendingStudents);
                     return;
@@ -641,16 +646,16 @@
         async function updateStats() {
             try {
                 // Get all courses
-                const coursesResponse = await fetch('/api/courses/all');
+                const coursesResponse = await fetchWithAuth('/api/courses/all');
                 const allCourses = await coursesResponse.json();
                 const myCourses = allCourses.filter(c => c.teacher && c.teacher.id === currentTeacher.id);
 
                 // Get all students
-                const studentsResponse = await fetch('/api/students');
+                const studentsResponse = await fetchWithAuth('/api/students');
                 const students = await studentsResponse.json();
 
                 // Get all enrollments
-                const enrollmentsResponse = await fetch('/api/enrollments');
+                const enrollmentsResponse = await fetchWithAuth('/api/enrollments');
                 const enrollments = await enrollmentsResponse.json();
 
                 // Get pending students
@@ -740,7 +745,7 @@
                 document.getElementById('availableCoursesLoading').style.display = 'block';
                 document.getElementById('availableCoursesContent').style.display = 'none';
 
-                const response = await fetch('/api/courses/unassigned');
+                const response = await fetchWithAuth('/api/courses/unassigned');
                 if (!response.ok) {
                     throw new Error('Failed to fetch available courses');
                 }

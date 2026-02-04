@@ -453,12 +453,18 @@
         </div>
     </div>
 
+    <script src="/js/auth.js"></script>
     <script>
         let currentCourse = null;
         let enrollments = [];
         const courseId = new URLSearchParams(window.location.search).get('courseId');
 
         window.addEventListener('DOMContentLoaded', async function() {
+            // Require teacher authentication
+            if (!requireRole('TEACHER')) {
+                return;
+            }
+
             if (!courseId) {
                 alert('No course ID provided');
                 window.location.href = '/teacher-dashboard';
@@ -470,8 +476,8 @@
 
         async function loadCourseAndStudents() {
             try {
-                // Load course details
-                const courseResponse = await fetch('/api/courses/all');
+                // Load course details with authentication
+                const courseResponse = await fetchWithAuth('/api/courses/all');
                 const courses = await courseResponse.json();
                 currentCourse = courses.find(c => c.id == courseId);
 

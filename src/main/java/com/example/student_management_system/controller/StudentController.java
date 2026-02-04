@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,6 +21,7 @@ public class StudentController {
     private final StudentService studentService;
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('STUDENT', 'TEACHER')")
     @Operation(summary = "Get all students")
     public ResponseEntity<List<Student>> getAllStudents() {
         List<Student> students = studentService.getAllStudents();
@@ -27,6 +29,7 @@ public class StudentController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('STUDENT', 'TEACHER')")
     @Operation(summary = "Get student by ID")
     public ResponseEntity<Student> getStudentById(@PathVariable Long id) {
         Student student = studentService.getStudentById(id);
@@ -34,6 +37,7 @@ public class StudentController {
     }
 
     @GetMapping("/department/{departmentId}")
+    @PreAuthorize("hasAnyRole('STUDENT', 'TEACHER')")
     @Operation(summary = "Get students by department")
     public ResponseEntity<List<Student>> getStudentsByDepartment(@PathVariable Long departmentId) {
         List<Student> students = studentService.getStudentsByDepartment(departmentId);
@@ -41,6 +45,7 @@ public class StudentController {
     }
 
     @GetMapping("/search")
+    @PreAuthorize("hasAnyRole('STUDENT', 'TEACHER')")
     @Operation(summary = "Search students by name or roll number")
     public ResponseEntity<List<Student>> searchStudents(@RequestParam String keyword) {
         List<Student> students = studentService.searchStudents(keyword);
@@ -48,6 +53,7 @@ public class StudentController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('STUDENT', 'TEACHER')")
     @Operation(summary = "Update student profile")
     public ResponseEntity<Student> updateStudent(
             @PathVariable Long id,
@@ -58,7 +64,8 @@ public class StudentController {
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Delete student")
+    @PreAuthorize("hasRole('TEACHER')")
+    @Operation(summary = "Delete student (Teacher only)")
     public ResponseEntity<Void> deleteStudent(@PathVariable Long id) {
         studentService.deleteStudent(id);
         return ResponseEntity.noContent().build();

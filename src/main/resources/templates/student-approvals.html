@@ -388,22 +388,27 @@
         </div>
     </div>
 
+    <script src="/js/auth.js"></script>
     <script>
         let pendingStudents = [];
         let selectedStudents = new Set();
 
         window.addEventListener('DOMContentLoaded', async function() {
+            // Require teacher authentication
+            if (!requireRole('TEACHER')) {
+                return;
+            }
             await loadData();
         });
 
         async function loadData() {
             try {
                 // Load all students to get statistics
-                const allStudentsResponse = await fetch('/api/students');
+                const allStudentsResponse = await fetchWithAuth('/api/students');
                 const allStudents = await allStudentsResponse.json();
 
                 // Load pending students
-                const pendingResponse = await fetch('/api/auth/pending-students');
+                const pendingResponse = await fetchWithAuth('/api/auth/pending-students');
 
                 if (pendingResponse.ok) {
                     pendingStudents = await pendingResponse.json();
@@ -523,7 +528,7 @@
             }
 
             try {
-                const response = await fetch(`/api/auth/approve-student/${studentId}`, {
+                const response = await fetchWithAuth(`/api/auth/approve-student/${studentId}`, {
                     method: 'POST'
                 });
 
@@ -546,7 +551,7 @@
             }
 
             try {
-                const response = await fetch(`/api/auth/reject-student/${studentId}`, {
+                const response = await fetchWithAuth(`/api/auth/reject-student/${studentId}`, {
                     method: 'POST'
                 });
 
@@ -578,7 +583,7 @@
 
             for (const studentId of selectedStudents) {
                 try {
-                    const response = await fetch(`/api/auth/approve-student/${studentId}`, {
+                    const response = await fetchWithAuth(`/api/auth/approve-student/${studentId}`, {
                         method: 'POST'
                     });
 
@@ -619,7 +624,7 @@
 
             for (const studentId of selectedStudents) {
                 try {
-                    const response = await fetch(`/api/auth/reject-student/${studentId}`, {
+                    const response = await fetchWithAuth(`/api/auth/reject-student/${studentId}`, {
                         method: 'POST'
                     });
 

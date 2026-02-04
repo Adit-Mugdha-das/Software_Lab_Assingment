@@ -315,36 +315,41 @@
         </div>
     </div>
 
+    <script src="/js/auth.js"></script>
     <script>
         let allCourses = [];
         let enrolledCourses = [];
         let currentStudent = null;
 
         window.addEventListener('DOMContentLoaded', async function() {
+            // Require authentication
+            if (!requireAuth()) {
+                return;
+            }
             await loadData();
         });
 
         async function loadData() {
             try {
-                const userEmail = sessionStorage.getItem('userEmail');
+                const userEmail = getUserInfo().email;
 
                 if (!userEmail) {
-                    window.location.href = '/';
+                    logout();
                     return;
                 }
 
-                // Load courses and current student
+                // Load courses and current student with authentication
                 const [coursesResponse, studentsResponse] = await Promise.all([
-                    fetch('/api/courses/all'),
-                    fetch('/api/students')
+                    fetchWithAuth('/api/courses/all'),
+                    fetchWithAuth('/api/students')
                 ]);
 
                 allCourses = await coursesResponse.json();
                 const students = await studentsResponse.json();
                 currentStudent = students.find(s => s.email === userEmail);
 
-                // Load enrollments
-                const enrollmentsResponse = await fetch('/api/enrollments');
+                // Load enrollments with authentication
+                const enrollmentsResponse = await fetchWithAuth('/api/enrollments');
                 const enrollments = await enrollmentsResponse.json();
                 enrolledCourses = enrollments
                     .filter(e => e.student && e.student.id === currentStudent.id)
@@ -435,12 +440,9 @@
                     academicYear: new Date().getFullYear().toString()
                 };
 
-                const response = await fetch('/api/enrollments', {
+                const response = await fetchWithAuth('/api/enrollments', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(enrollmentData)
+                    body: enrollmentData
                 });
 
                 if (response.ok) {

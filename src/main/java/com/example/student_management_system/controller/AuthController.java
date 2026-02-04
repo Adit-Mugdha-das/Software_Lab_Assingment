@@ -1,9 +1,12 @@
 package com.example.student_management_system.controller;
 
+import com.example.student_management_system.dto.AuthResponse;
+import com.example.student_management_system.dto.LoginRequest;
 import com.example.student_management_system.dto.StudentRegistrationRequest;
 import com.example.student_management_system.dto.TeacherRegistrationRequest;
 import com.example.student_management_system.entity.Student;
 import com.example.student_management_system.entity.Teacher;
+import com.example.student_management_system.service.AuthService;
 import com.example.student_management_system.service.StudentService;
 import com.example.student_management_system.service.TeacherService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -22,8 +25,21 @@ import java.util.List;
 @Tag(name = "Authentication", description = "Authentication and registration endpoints")
 public class AuthController {
 
+    private final AuthService authService;
     private final StudentService studentService;
     private final TeacherService teacherService;
+
+    @PostMapping("/login")
+    @Operation(summary = "Login user (student or teacher)")
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
+        try {
+            AuthResponse response = authService.login(request);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new ErrorResponse(e.getMessage()));
+        }
+    }
 
     @PostMapping("/register/student")
     @Operation(summary = "Register a new student")

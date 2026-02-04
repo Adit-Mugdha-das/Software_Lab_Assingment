@@ -376,30 +376,35 @@
         </div>
     </div>
 
+    <script src="/js/auth.js"></script>
     <script>
         let currentStudent = null;
         let isEditMode = false;
 
         window.addEventListener('DOMContentLoaded', async function() {
+            // Require authentication
+            if (!requireAuth()) {
+                return;
+            }
             await loadProfile();
         });
 
         async function loadProfile() {
             try {
-                const userEmail = sessionStorage.getItem('userEmail');
+                const userEmail = getUserInfo().email;
 
                 console.log('Loading profile for:', userEmail);
 
                 if (!userEmail) {
                     console.error('No email in sessionStorage');
                     alert('Please login first');
-                    window.location.href = '/';
+                    logout();
                     return;
                 }
 
                 // Fetch all students and find the current user
                 console.log('Fetching students from /api/students...');
-                const response = await fetch('/api/students');
+                const response = await fetchWithAuth('/api/students');
 
                 console.log('Response status:', response.status);
 

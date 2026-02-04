@@ -216,7 +216,6 @@
                         <option value="">Select Role</option>
                         <option value="student">Student</option>
                         <option value="teacher">Teacher</option>
-                        <option value="admin">Administrator</option>
                     </select>
                 </div>
 
@@ -240,7 +239,7 @@
     </div>
 
     <script>
-        // Login form with database validation
+        // Login form with JWT authentication
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
 
@@ -260,99 +259,47 @@
             submitBtn.disabled = true;
 
             try {
-                // Fetch students and teachers to validate login
-                const [studentsResponse, teachersResponse] = await Promise.all([
-                    fetch('/api/students'),
-                    fetch('/api/teachers')
-                ]);
+                // Call the authentication API
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        password: password
+                    })
+                });
 
-                if (!studentsResponse.ok || !teachersResponse.ok) {
-                    throw new Error('Failed to connect to server');
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ message: 'Invalid credentials' }));
+                    throw new Error(errorData.message || 'Login failed');
                 }
 
-                const students = await studentsResponse.json();
-                const teachers = await teachersResponse.json();
+                const data = await response.json();
 
-                console.log('Checking login for:', email);
-                console.log('Total students in database:', students.length);
-                console.log('Total teachers in database:', teachers.length);
+                console.log('Login successful:', data);
 
-                let user = null;
-                let userType = null;
-
-                // Check if logging in as student
-                if (role === 'student') {
-                    user = students.find(s =>
-                        s.email && s.email.toLowerCase() === email.toLowerCase()
-                    );
-                    userType = 'student';
-                } else if (role === 'teacher') {
-                    user = teachers.find(t =>
-                        t.email && t.email.toLowerCase() === email.toLowerCase()
-                    );
-                    userType = 'teacher';
-                }
-
-                console.log('Available students:', students.map(s => ({
-                    id: s.id,
-                    email: s.email,
-                    name: s.name,
-                    status: s.status
-                })));
-
-                console.log('Available teachers:', teachers.map(t => ({
-                    id: t.id,
-                    email: t.email,
-                    name: t.name
-                })));
-
-                if (!user) {
-                    console.error('User not found with email:', email);
-                    const allEmails = role === 'student'
-                        ? students.map(s => s.email)
-                        : teachers.map(t => t.email);
-
-                    alert(`Invalid email address. ${userType} not found.\n\n` +
-                          `Available registered ${userType} emails:\n` +
-                          allEmails.join('\n') +
-                          '\n\nPlease check your email or register first.');
+                // Verify role matches
+                if (data.role && data.role.toLowerCase() !== role.toLowerCase()) {
+                    alert(`You selected to login as ${role}, but this account is registered as ${data.role}. Please select the correct role.`);
                     submitBtn.textContent = originalText;
                     submitBtn.disabled = false;
                     return;
                 }
 
-                console.log('User found:', user);
-                console.log('Stored password:', user.password);
-                console.log('Entered password:', password);
+                // Store authentication data
+                sessionStorage.setItem('jwtToken', data.token);
+                sessionStorage.setItem('userRole', data.role.toLowerCase());
+                sessionStorage.setItem('userEmail', data.email);
+                sessionStorage.setItem('userId', data.id);
+                sessionStorage.setItem('userName', data.name);
+                sessionStorage.setItem('userStatus', data.status);
 
-                // Verify password (simple check since passwords are plain text for now)
-                if (user.password !== password) {
-                    console.error('Password mismatch!');
-                    alert('Invalid password. Please try again.\n\n' +
-                          'Password is case-sensitive. Make sure you entered it correctly.');
-                    submitBtn.textContent = originalText;
-                    submitBtn.disabled = false;
-                    return;
-                }
-
-                // Check if student is active (teachers are always active)
-                if (role === 'student' && user.status && user.status !== 'ACTIVE') {
-                    alert('Your account is not active. Status: ' + user.status + '\n\nPlease contact administration.');
-                    submitBtn.textContent = originalText;
-                    submitBtn.disabled = false;
-                    return;
-                }
-
-                // Login successful - store the EXACT email from database
-                sessionStorage.setItem('userRole', role);
-                sessionStorage.setItem('userEmail', user.email); // Use email from database
-                sessionStorage.setItem('userId', user.id);
-                sessionStorage.setItem('userName', user.name);
-
-                console.log('Login successful! Stored email:', user.email);
+                console.log('Login successful! Redirecting...');
 
                 // Redirect based on role
-                if (role === 'teacher') {
+                if (data.role === 'TEACHER') {
                     window.location.href = '/teacher-dashboard';
                 } else {
                     window.location.href = '/dashboard';
@@ -360,7 +307,7 @@
 
             } catch (error) {
                 console.error('Login error:', error);
-                alert('Login failed: ' + error.message + '\n\nPlease try again or contact support.');
+                alert('Login failed: ' + error.message + '\n\nPlease check your credentials and try again.');
                 submitBtn.textContent = originalText;
                 submitBtn.disabled = false;
             }

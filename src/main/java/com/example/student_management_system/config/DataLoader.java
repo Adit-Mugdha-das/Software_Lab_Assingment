@@ -20,9 +20,10 @@ public class DataLoader implements CommandLineRunner {
     private final TeacherRepository teacherRepository;
     private final StudentRepository studentRepository;
     private final CourseRepository courseRepository;
+    private final PasswordEncoder passwordEncoder;
 
     // Set this to true to force reload data (clears existing data)
-    private static final boolean FORCE_RELOAD = false;
+    private static final boolean FORCE_RELOAD = true;
 
     @Override
     public void run(String... args) throws Exception {
@@ -77,7 +78,7 @@ public class DataLoader implements CommandLineRunner {
         Teacher teacher1 = Teacher.builder()
                 .name("Dr. John Smith")
                 .email("john.smith@university.edu")
-                .password("teacher123")
+                .password(passwordEncoder.encode("teacher123"))
                 .phone("1234567890")
                 .employeeId("T001")
                 .specialization("Artificial Intelligence")
@@ -92,7 +93,7 @@ public class DataLoader implements CommandLineRunner {
         Teacher teacher2 = Teacher.builder()
                 .name("Dr. Sarah Johnson")
                 .email("sarah.johnson@university.edu")
-                .password("teacher123")
+                .password(passwordEncoder.encode("teacher123"))
                 .phone("1234567891")
                 .employeeId("T002")
                 .specialization("Database Systems")
@@ -246,7 +247,7 @@ public class DataLoader implements CommandLineRunner {
                 .department(csDept)
                 .build();
         student1.setEmail("alice.brown@student.edu");
-        student1.setPassword("student123");
+        student1.setPassword(passwordEncoder.encode("student123"));
         student1.setRole(User.Role.STUDENT);
         student1.setStatus(User.AccountStatus.ACTIVE);
 
@@ -264,7 +265,7 @@ public class DataLoader implements CommandLineRunner {
                 .department(csDept)
                 .build();
         student2.setEmail("bob.wilson@student.edu");
-        student2.setPassword("student123");
+        student2.setPassword(passwordEncoder.encode("student123"));
         student2.setRole(User.Role.STUDENT);
         student2.setStatus(User.AccountStatus.PENDING);
 

@@ -116,7 +116,6 @@
                     <th>ID</th>
                     <th>Name</th>
                     <th>Email</th>
-                    <th>Password</th>
                     <th>Roll Number</th>
                     <th>Department</th>
                     <th>Status</th>
@@ -127,14 +126,19 @@
         </table>
     </div>
 
+    <script src="/js/auth.js"></script>
     <script>
         window.addEventListener('DOMContentLoaded', async function() {
+            // Check authentication (teacher only page)
+            if (!requireRole('TEACHER')) {
+                return;
+            }
             await loadStudents();
         });
 
         async function loadStudents() {
             try {
-                const response = await fetch('/api/students');
+                const response = await fetchWithAuth('/api/students');
 
                 if (!response.ok) {
                     throw new Error('Failed to fetch students');
@@ -160,7 +164,7 @@
             tbody.innerHTML = '';
 
             if (students.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No students found</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No students found</td></tr>';
                 return;
             }
 
@@ -170,7 +174,6 @@
                     <td>${student.id}</td>
                     <td>${student.name}</td>
                     <td><code>${student.email}</code></td>
-                    <td><code>${student.password || 'N/A'}</code></td>
                     <td>${student.rollNumber}</td>
                     <td>${student.department ? student.department.name : 'N/A'}</td>
                     <td class="status-${student.status ? student.status.toLowerCase() : 'active'}">

@@ -551,6 +551,7 @@
         </div>
     </div>
 
+    <script src="/js/auth.js"></script>
     <script>
         // Animate numbers counting up
         function animateValue(element, start, end, duration) {
@@ -570,8 +571,14 @@
 
         // Load user info and data
         window.addEventListener('DOMContentLoaded', async function() {
-            const userRole = sessionStorage.getItem('userRole') || 'Student';
-            const userEmail = sessionStorage.getItem('userEmail') || 'guest@example.com';
+            // Require authentication
+            if (!requireAuth()) {
+                return;
+            }
+
+            const userInfo = getUserInfo();
+            const userRole = userInfo.role || 'student';
+            const userEmail = userInfo.email || 'guest@example.com';
 
             // Update user info with animation
             setTimeout(() => {
@@ -591,25 +598,14 @@
             await fetchCounts();
         });
 
-        function logout() {
-            // Add fade out animation
-            document.body.style.opacity = '0';
-            document.body.style.transition = 'opacity 0.3s ease';
-
-            setTimeout(() => {
-                sessionStorage.clear();
-                window.location.href = '/';
-            }, 300);
-        }
-
         async function fetchCounts() {
             try {
-                // Fetch all data in parallel
+                // Fetch all data in parallel with authentication
                 const [studentsResponse, teachersResponse, coursesResponse, deptsResponse] = await Promise.all([
-                    fetch('/api/students'),
-                    fetch('/api/teachers'),
-                    fetch('/api/courses/all'),
-                    fetch('/api/departments/all')
+                    fetchWithAuth('/api/students'),
+                    fetchWithAuth('/api/teachers'),
+                    fetchWithAuth('/api/courses/all'),
+                    fetchWithAuth('/api/departments/all')
                 ]);
 
                 // Process students
